@@ -4,25 +4,28 @@ import { themes } from "../types/theme";
 import { useEffect, useState } from "react";
 
 export const ThemeToggle = () => {
+  // Extrae del store el tema actual, el efectivo (visual) y el setter
   const { currentTheme, effectiveTheme, setTheme } = useThemeStore();
+  // Detecta si es móvil (<768px)
   const [isMobile, setIsMobile] = useState(false);
+  // Controla si el menú está abierto (modo escritorio)
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Detectar cambios en el sistema
+  //* ⬛ 1. Escuchar si cambia el tema del sistema
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const listener = () => {
-      if (currentTheme.value === 'system') {
+      if (currentTheme.value === "system") {
         const newSystemTheme = getSystemTheme();
-        document.documentElement.setAttribute('data-theme', newSystemTheme);
+        document.documentElement.setAttribute("data-theme", newSystemTheme);
         useThemeStore.setState({ effectiveTheme: newSystemTheme });
       }
     };
-    mediaQuery.addEventListener('change', listener);
-    return () => mediaQuery.removeEventListener('change', listener);
+    mediaQuery.addEventListener("change", listener);
+    return () => mediaQuery.removeEventListener("change", listener);
   }, [currentTheme.value]);
 
-  // Responsive
+  //* 📱 2. Detectar si el tamaño de pantalla es móvil
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -30,28 +33,32 @@ export const ThemeToggle = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Mobile: Solo light/dark
+  //* 📱 3. Versión móvil: solo cambia entre dark/light
   if (isMobile) {
     return (
       <button
         onClick={() => {
-          setTheme(effectiveTheme === 'dark' ? themes[0] : themes[1]);
+          setTheme(effectiveTheme === "dark" ? themes[0] : themes[1]);
         }}
         className="md:hidden relative w-16 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none bg-gray-200 dark:bg-gray-700"
-        aria-label={`Switch to ${effectiveTheme === 'dark' ? 'light' : 'dark'} mode`}
+        aria-label={`Switch to ${
+          effectiveTheme === "dark" ? "light" : "dark"
+        } mode`}
       >
         <div
           className={`absolute top-1 w-6 h-6 rounded-full transition-transform duration-300 flex items-center justify-center ${
-            effectiveTheme === 'dark' ? 'bg-gray-900 translate-x-8' : 'bg-yellow-300 translate-x-0'
+            effectiveTheme === "dark"
+              ? "bg-gray-900 translate-x-8"
+              : "bg-yellow-300 translate-x-0"
           }`}
         >
-          {effectiveTheme === 'dark' ? '🌙' : '☀️'}
+          {effectiveTheme === "dark" ? "🌙" : "☀️"}
         </div>
       </button>
     );
   }
 
-  // Desktop: Menú completo
+  //* 🖥️ 4. Versión escritorio: botón con menú
   return (
     <div className="relative hidden md:block">
       <button
