@@ -16,14 +16,6 @@
   --color-secondary: #fbbf24;
 }
 
-/* es mucho no sirve exceso de colores DEPENDE del uso */
-/* [data-theme='forest'] {
-  --color-background: #f0fff4;
-  --color-foreground: #042618;
-  --color-primary: #4caf50;
-  --color-secondary: #6b8e23;
-} */
-
 /** 3. Estilos base */
 @layer base {
   html, body {

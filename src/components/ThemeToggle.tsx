@@ -1,13 +1,28 @@
+import { getSystemTheme } from "../lib/theme-utils";
 import { useThemeStore } from "../stores/themeStore";
 import { themes } from "../types/theme";
 import { useEffect, useState } from "react";
 
 export const ThemeToggle = () => {
-  const { currentTheme, setTheme } = useThemeStore();
+  const { currentTheme, effectiveTheme, setTheme } = useThemeStore();
   const [isMobile, setIsMobile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // 1. Detectar si es móvil
+  // Detectar cambios en el sistema
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const listener = () => {
+      if (currentTheme.value === 'system') {
+        const newSystemTheme = getSystemTheme();
+        document.documentElement.setAttribute('data-theme', newSystemTheme);
+        useThemeStore.setState({ effectiveTheme: newSystemTheme });
+      }
+    };
+    mediaQuery.addEventListener('change', listener);
+    return () => mediaQuery.removeEventListener('change', listener);
+  }, [currentTheme.value]);
+
+  // Responsive
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -15,31 +30,28 @@ export const ThemeToggle = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // 2. Versión móvil (solo light/dark)
+  // Mobile: Solo light/dark
   if (isMobile) {
-    const isDark = currentTheme.value === "dark";
-
     return (
       <button
         onClick={() => {
-          // 2.1 Alternar solo entre light y dark
-          setTheme(isDark ? themes[0] : themes[1]);
+          setTheme(effectiveTheme === 'dark' ? themes[0] : themes[1]);
         }}
         className="md:hidden relative w-16 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none bg-gray-200 dark:bg-gray-700"
-        aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+        aria-label={`Switch to ${effectiveTheme === 'dark' ? 'light' : 'dark'} mode`}
       >
         <div
           className={`absolute top-1 w-6 h-6 rounded-full transition-transform duration-300 flex items-center justify-center ${
-            isDark ? "bg-gray-900 translate-x-8" : "bg-yellow-300 translate-x-0"
+            effectiveTheme === 'dark' ? 'bg-gray-900 translate-x-8' : 'bg-yellow-300 translate-x-0'
           }`}
         >
-          {isDark ? "🌙" : "☀️"}
+          {effectiveTheme === 'dark' ? '🌙' : '☀️'}
         </div>
       </button>
     );
   }
 
-  // 3. Versión desktop (menú completo)
+  // Desktop: Menú completo
   return (
     <div className="relative hidden md:block">
       <button

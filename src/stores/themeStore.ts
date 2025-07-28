@@ -1,32 +1,49 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { themes, type Theme } from "../types/theme";
 import { getSystemTheme } from "../lib/theme-utils";
 
-// 1. Definir tipo para el estado del tema
 type ThemeState = {
-  currentTheme: Theme; // 1.1 Tema actual
-  setTheme: (theme: Theme) => void; // 1.2 Función para cambiar
+  currentTheme: Theme;
+  effectiveTheme: 'light' | 'dark'; // Tema visual actual
+  setTheme: (theme: Theme) => void;
 };
 
-// 2. Crear store con Zustand
-export const useThemeStore = create<ThemeState>((set) => ({
-  // 2.1 Estado inicial (usar guardado o sistema)
-  currentTheme: themes.find((t) => t.value === localStorage.theme) || themes[2],
-
-  // 2.2 Función para cambiar tema
-  setTheme: (theme) => {
-    if (theme.value === "system") {
-      localStorage.removeItem("theme"); // 2.3 No guardar 'system'
-    } else {
-      localStorage.theme = theme.value; // 2.4 Guardar preferencia
+export const useThemeStore = create<ThemeState>()(
+  persist(
+    (set) => ({
+      currentTheme: themes[2], // Default a system
+      effectiveTheme: getSystemTheme(), // Tema real aplicado
+      
+      setTheme: (theme) => {
+        const newEffectiveTheme = theme.value === 'system' 
+          ? getSystemTheme() 
+          : theme.value;
+        
+        document.documentElement.setAttribute('data-theme', newEffectiveTheme);
+        
+        set({ 
+          currentTheme: theme,
+          effectiveTheme: newEffectiveTheme
+        });
+      },
+    }),
+    {
+      name: 'theme-storage',
+      partialize: (state) => ({ currentTheme: state.currentTheme }),
     }
+  )
+);
 
-    set({ currentTheme: theme }); // 2.5 Actualizar estado
+// Inicialización sincrónica al cargar el store
+const initializeTheme = () => {
+  const storeState = useThemeStore.getState();
+  const effective = storeState.currentTheme.value === 'system'
+    ? getSystemTheme()
+    : storeState.currentTheme.value;
+  
+  document.documentElement.setAttribute('data-theme', effective);
+  useThemeStore.setState({ effectiveTheme: effective });
+};
 
-    // 2.6 Aplicar al documento HTML
-    document.documentElement.setAttribute(
-      "data-theme",
-      theme.value === "system" ? getSystemTheme() : theme.value
-    );
-  },
-}));
+initializeTheme();
