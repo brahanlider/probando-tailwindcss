@@ -1,0 +1,31 @@
+@import 'tailwindcss';
+
+/** 1. Definir tema base (light) */
+@theme {
+  --color-background: #f9fafb;
+  --color-foreground: #1f2937;
+  --color-primary: #10b981;
+  --color-secondary: #3b82f6;
+}
+
+/** 2. Sobreescribir temas (sintaxis actualizada) */
+[data-theme='dark'] {
+  --color-background: #111827;
+  --color-foreground: #e5e7eb;
+  --color-primary: #f43f5e;
+  --color-secondary: #fbbf24;
+}
+
+[data-theme='forest'] {
+  --color-background: #f0fff4;
+  --color-foreground: #042618;
+  --color-primary: #4caf50;
+  --color-secondary: #6b8e23;
+}
+
+/** 3. Estilos base */
+@layer base {
+  html, body {
+    @apply bg-background text-foreground min-h-full;
+  }
+}
